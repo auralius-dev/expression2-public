@@ -1,0 +1,69 @@
+# Spawns a void grenade. Does not work on servers with entity spawn delay limits, as it would be slow. Use wisely.
+
+@persist [C, F]:entity R:number P:vector G:array
+
+Count = 100
+
+if (first()) {
+    runOnTick(1)
+    
+    C = entity()
+    C:propNotSolid(1)
+    C:propDraw(0)
+    
+    P = C:pos() + vec(0, 0, 4)
+    for (I = 1, Count) {
+        concmd("gm_spawnsent npc_grenade_frag")
+    }
+    timer("w", 1000)
+}
+
+if (clk("w")) {
+    findIncludePlayerProps(owner())
+    findByClass("npc_grenade_frag")
+    G = findToArray()
+
+    for (I = 1, G:count()) {
+        E = G[I, entity]
+        
+        E:propFreeze(1)
+        if (I != 1) {
+            E:setAlpha(0)
+            E:propNotSolid(1)
+        }
+        E:setAng(ang(0))
+        E:setPos(P)
+    }
+    timer("s", 1)
+}
+
+if (clk("s")) {
+    F = G[1, entity]
+    
+    for (I = 1, G:count()) {
+        E = G[I, entity]
+        
+        if (I != 1) { E:parentTo(F) }
+        E:propFreeze(0)
+    }
+    
+    F:setColor(vec(0, 0, 0))
+
+    for (I = 1, holoMaxAmount()) {
+        holoCreate(I)
+        holoPos(I, P)
+        holoEntity(I):soundPlay(I, 0, "synth/sine.wav")
+        soundPitch(I, 6)
+        soundVolume(I, 1)
+        holoAlpha(I, 0)
+        holoParent(I, F)
+    }
+    
+    R = 1
+}
+
+if (tickClk() && R) {
+    if (F:pos() == vec(0, 0, 0)) { selfDestruct() }
+}
+
+# Made by Auralius.
