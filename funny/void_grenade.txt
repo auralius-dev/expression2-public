@@ -1,52 +1,56 @@
 # Spawns a void grenade. Does not work on servers with entity spawn delay limits, as it would be slow. Use wisely.
 
-@persist [C, F]:entity R:number P:vector G:array
-
-Count = 100
+@name Void Grenade
+@persist COUNT ENGAGE_DELAY
+@persist F:entity R:number P:vector G:array
 
 if (first()) {
     runOnTick(1)
+    
+    # How many grenades.
+    COUNT = 100
+    
+    # How long to wait until combining grenades in milliseconds, if it fails raise this.
+    ENGAGE_DELAY = 1000
     
     C = entity()
     C:propNotSolid(1)
     C:propDraw(0)
     
     P = C:pos() + vec(0, 0, 4)
-    for (I = 1, Count) {
+    
+    for (I = 1, COUNT) {
         concmd("gm_spawnsent npc_grenade_frag")
     }
-    timer("w", 1000)
+    timer("pre", ENGAGE_DELAY)
 }
 
-if (clk("w")) {
+if (clk("pre")) {
     findIncludePlayerProps(owner())
     findByClass("npc_grenade_frag")
     G = findToArray()
-
-    for (I = 1, G:count()) {
-        E = G[I, entity]
-        
-        E:propFreeze(1)
+    
+    foreach (I, K:entity = G) {
+        K:propFreeze(1)
         if (I != 1) {
-            E:setAlpha(0)
-            E:propNotSolid(1)
+            K:setAlpha(0)
+            K:propNotSolid(1)
         }
-        E:setAng(ang(0))
-        E:setPos(P)
+        K:setAng(ang(0))
+        K:setPos(P)
     }
-    timer("s", 1)
+    
+    timer("post", 1)
 }
 
-if (clk("s")) {
+if (clk("post")) {
     F = G[1, entity]
     
-    for (I = 1, G:count()) {
-        E = G[I, entity]
-        
-        if (I != 1) { E:parentTo(F) }
-        E:propFreeze(0)
+    foreach (I, K:entity = G) {
+        if (I != 1) { K:parentTo(F) }
+        K:propFreeze(0)
     }
-    
+
     F:setColor(vec(0, 0, 0))
 
     for (I = 1, holoMaxAmount()) {
@@ -59,11 +63,13 @@ if (clk("s")) {
         holoParent(I, F)
     }
     
+    #G = array()
     R = 1
 }
 
 if (tickClk() && R) {
-    if (F:pos() == vec(0, 0, 0)) { selfDestruct() }
+    if (F:pos() == vec()) { selfDestruct() }
 }
 
 # Made by Auralius.
+# https://github.com/auralius-dev/expression2-public
