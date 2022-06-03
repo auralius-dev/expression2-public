@@ -1,7 +1,7 @@
 # Spawns a void grenade. Does not work on servers with entity spawn delay limits, as it would be slow. Use wisely.
 
 @name Void Grenade
-@persist COUNT ENGAGE_DELAY
+@persist [COUNT, ENGAGE_DELAY]:number 
 @persist F:entity R:number P:vector G:array
 
 if (first()) {
